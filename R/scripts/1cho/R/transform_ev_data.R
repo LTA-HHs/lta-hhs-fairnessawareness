@@ -88,7 +88,7 @@ transform_ev_data <- function(df, naam, eoi, vorm, dec_vopl, dec_isat) {
       inschrijvingsjaar == eerste_jaar_aan_deze_opleiding_instelling + 1
     )) |>
     
-    mutate(retentie = if_else(retentie == 0, "Nee", "Ja")) |>
+    mutate(retentie = if_else(retentie == 0, "FALSE", "TRUE")) |>
     
     ungroup() |>
     

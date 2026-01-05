@@ -10,7 +10,7 @@ params:
   succes: "Retentie na 1 jaar"
   model: "Retentie na 1 jaar"
   pd: "Nvt"
-  use_synthetic_data: true
+  use_synthetic_data: false
   use_1cho: true
   recreate_plots: false
   enrollment_selection: false
@@ -259,14 +259,13 @@ name_mapping_list <- setNames(df_variables$VAR_Simple_variable, df_variables$VAR
 df_sp_enrollments <- df_sp_enrollments |>
   
   # Select the relevant variables
-  select(any_of(c(list_select, "ID"))) |>
+  select(any_of(c(list_select))) |>
   
   # Rename variables for more readable names
   rename_with(
   ~ dplyr::coalesce(name_mapping_list[.x], .x),
   .cols = everything()
   ) |>
-
   
   # Adjust CBS_APCG_tf to a factor
   mutate_apcg() |>
@@ -555,8 +554,8 @@ lr_recipe <-
   recipe(Retentie ~ ., data = df_retention_train) |>  
   update_role(ID, new_role = "ID") |>           # Set the student ID as an ID variable
   step_rm(ID, Collegejaar) |>                   # Remove ID and college year from the model
-  step_unknown(Studiekeuzeprofiel, 
-               new_level = "Onbekend skp") |>   # Add unknown skp
+  # step_unknown(Studiekeuzeprofiel, 
+  #              new_level = "Onbekend skp") |>   # Add unknown skp
   step_dummy(all_nominal_predictors()) |>       # Create dummy variables from categorical variables
   step_zv(all_predictors()) |>                  # Remove zero values
   step_normalize(all_numeric_predictors())      # Center and scale numeric variables
@@ -833,8 +832,8 @@ We maken een recipe voor het random forest model. We verwijderen de student ID e
 # Create the recipe: random forest
 rf_recipe <- 
   recipe(Retentie ~ ., data = df_retention_train) |> 
-  step_unknown(Studiekeuzeprofiel, 
-               new_level = "Onbekend skp") |>   # Add unknown skp
+  # step_unknown(Studiekeuzeprofiel, 
+  #              new_level = "Onbekend skp") |>   # Add unknown skp
   step_rm(ID, Collegejaar)                      # Remove ID and Collegejaar from the model
 ```
 
