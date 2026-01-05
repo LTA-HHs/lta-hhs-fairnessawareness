@@ -10,7 +10,7 @@ params:
   succes: "Retentie na 1 jaar"
   model: "Retentie na 1 jaar"
   pd: "Nvt"
-  use_synthetic_data: true
+  use_synthetic_data: false
   recreate_plots: false
   enrollment_selection: false
   sp: "CMD"
@@ -126,12 +126,12 @@ if (params$use_synthetic_data) {
       INS_Opleidingsnaam_huidig = paste(INS_Opleidingsnaam_huidig, "(Synth.)", sep = " ")
     )
 } else {
+  library(ltabase)
   df_sp_enrollments <- 
-    get_lta_studyprogram_enrollments_pin(board = "HHs/Inschrijvingen",
+    ltabase::get_lta_studyprogram_enrollments_pin(board = "HHs/Inschrijvingen",
                                          faculty = params$faculty,
-                                         studyprogram = params$sp,
-                                         sp = params$sp,
-                                         sp_form = toupper(params$sp_form),
+                                         studyprogram = current_sp$INS_Opleidingsnaam_huidig,
+                                         studyform = toupper(params$sp_form),
                                          range = "eerstejaars")
 }
 

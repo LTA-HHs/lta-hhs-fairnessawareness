@@ -7,7 +7,7 @@ params:
   succes: "Retentie na 1 jaar"
   model: "Retentie na 1 jaar"
   pd: "Nvt"
-  use_synthetic_data: true
+  use_synthetic_data: false
   recreate_plots: false
   sp: "CMD"
   sp_form: "VT"
