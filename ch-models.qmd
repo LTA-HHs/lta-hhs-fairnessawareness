@@ -11,6 +11,7 @@ params:
   model: "Retentie na 1 jaar"
   pd: "Nvt"
   use_synthetic_data: true
+  use_1cho: true
   recreate_plots: false
   enrollment_selection: false
   sp: "CMD"
@@ -126,6 +127,64 @@ if (params$use_synthetic_data) {
       INS_Opleidingsnaam_huidig = paste(INS_Opleidingsnaam_huidig, "(Synth.)", sep = " ")
     )
 } else {
+  if(params$use_1cho) {
+    
+    opleidingsnaam <- current_sp$INS_Opleidingsnaam_huidig
+    opleidingsvorm <- toupper(params$sp_form)
+    
+    ## TODO: TEMP
+    opleidingsnaam <- "B International Business Administration"
+    opleidingsvorm <- "VT"
+
+    install_formats("parquet")
+    
+    ## TODO: Pas aan naar waar jou parquet bestand staat.
+    df1cho <- rio::import(
+      fs::path(
+        Sys.getenv("LTA_ROOT"),
+        "00 LTA Data",
+        "1CHO",
+        "synthetische data",
+        "EV299XX24.parquet"
+      )
+    )
+
+
+    df1cho_vak <- rio::import(
+      fs::path(
+        Sys.getenv("LTA_ROOT"),
+        "00 LTA Data",
+        "1CHO",
+        "synthetische data",
+        "VAKHAVW_99XX.parquet"
+      )
+    )
+
+    ## . ####
+    ## +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    ## Metadata Inlezen ####
+    ## +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
+    source("R/scripts/1cho/01_read_metadata.R")
+    metadata <- read_metadata()
+
+    ## . ####
+    ## +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    ## Transform Data ####
+    ## +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
+    source("R/scripts/1cho/02_transform_data.R")
+    df_sp_enrollments <- transform_data(metadata,
+                         opleidingsnaam,
+                         opleidingsvorm,
+                         0,
+                         df1cho,
+                         df1cho_vak)
+
+     
+    
+  } else {
+    
   df_sp_enrollments <- 
     get_lta_studyprogram_enrollments_pin(board = "HHs/Inschrijvingen",
                                          faculty = params$faculty,
@@ -133,8 +192,12 @@ if (params$use_synthetic_data) {
                                          sp = params$sp,
                                          sp_form = toupper(params$sp_form),
                                          range = "eerstejaars")
+    
+  }
+
 }
 
+if(!params$use_1cho) {
 # Adjust df_sp_enrollments
 df_sp_enrollments <- df_sp_enrollments |> 
   
@@ -157,7 +220,7 @@ df_sp_enrollments <- df_sp_enrollments |>
 
   # Remove INS_Aantal_inschrijvingen
   select(-INS_Aantal_inschrijvingen) 
-
+}
 ## Adjust the levels of sensitive variables
 for (i in sensitive_formal_variables){
   df_sp_enrollments <- df_sp_enrollments |>
@@ -196,10 +259,14 @@ name_mapping_list <- setNames(df_variables$VAR_Simple_variable, df_variables$VAR
 df_sp_enrollments <- df_sp_enrollments |>
   
   # Select the relevant variables
-  select(all_of(list_select)) |>
+  select(any_of(c(list_select, "ID"))) |>
   
   # Rename variables for more readable names
-  rename_with(~ name_mapping_list[.x], .cols = everything()) |> 
+  rename_with(
+  ~ dplyr::coalesce(name_mapping_list[.x], .x),
+  .cols = everything()
+  ) |>
+
   
   # Adjust CBS_APCG_tf to a factor
   mutate_apcg() |>
@@ -238,7 +305,7 @@ df_summary <- df_sp_enrollments |>
   mutate(Retentie = fct_relevel(Retentie, "Ja", "Nee")) |> 
   
   # Adjust Studiekeuzeprofiel: if NA, then unknown
-  mutate(Studiekeuzeprofiel = coalesce(Studiekeuzeprofiel, "Onbekend")) |> 
+  #mutate(Studiekeuzeprofiel = coalesce(Studiekeuzeprofiel, "Onbekend")) |> 
   
   # Factor all character variables
   mutate(across(where(is.character), as.factor))
@@ -350,7 +417,7 @@ Clusters in correlaties kunnen per opleiding verschillen. Onderzoek in de correl
 # Create a plot of the intercorrelations in numerical variables
 # Remove columns with a standard deviation of 0
 df_correlation <- df_sp_enrollments |> 
-  select(-Collegejaar) |>
+  select(-Collegejaar, -ID) |>
   select(where(is.numeric)) |> 
   select_if(~ sd(.) != 0) |>
   cor()

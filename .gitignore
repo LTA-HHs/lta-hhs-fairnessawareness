@@ -80,3 +80,6 @@ _freeze
 
 # Icon files
 Icon?
+
+#.Ds_Store
+.Ds_Store
