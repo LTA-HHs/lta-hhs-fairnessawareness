@@ -454,7 +454,7 @@ if (setup_executed == FALSE) {
     cli_h1("Data and model files.")
     # Data - adjust the Retention variable to numeric (0/1),
     df_sp_enrollments <- rio::import(data_outputpath, trust = TRUE) |> 
-      mutate(across(all_of(names(levels)), ~ factor(.x, 
+      mutate(across(any_of(names(levels)), ~ factor(.x, 
                                                     levels = levels[[cur_column()]]))) |> 
       mutate(Retentie = as.numeric(Retentie) - 1)
     
