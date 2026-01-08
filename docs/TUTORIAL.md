@@ -233,6 +233,7 @@ consists of the following components:
       (false or true)  
     - `use_synthetic_data`: whether to use synthetic data (false or
       true).
+    - `use_1cho`: whether to use 1CHO data
     - `recreate_plots`: whether you want to recreate the plots (false or
       true)
     - `sp`: the code of the study programme
