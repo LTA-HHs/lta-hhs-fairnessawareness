@@ -538,13 +538,13 @@ variable_splits <- list(
   SES_Totaal = seq(
     min(df_sp_enrollments$SES_Totaal),
     max(df_sp_enrollments$SES_Totaal),
-    0.1
-  ),
-  Aanmelding = seq(
-    min(df_sp_enrollments$Aanmelding),
-    max(df_sp_enrollments$Aanmelding),
-    1
-  )
+    0.1)
+  # ),
+  # Aanmelding = seq(
+  #   min(df_sp_enrollments$Aanmelding),
+  #   max(df_sp_enrollments$Aanmelding),
+  #   1
+  # )
 )
 
 for (group in sensitive_labels) {
