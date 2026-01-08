@@ -98,7 +98,7 @@ transform_ev_data <- function(df, naam, eoi, vorm, dec_vopl, dec_isat) {
     mutate_aantal_inschrijvingen(df) |>
     
     ## Create variable dubbele studie
-    mutate(dubbele_studie = ifelse(aantal_inschrijvingen > 1, TRUE, FALSE)) |>
+    mutate(dubbele_studie = ifelse(aantal_inschrijvingen > 1, "Ja", "Nee")) |>
     
     ## Make postcode integer
     mutate(across(postcodecijfers_student_op_1_oktober, ~ as.integer(.))) |>
