@@ -1593,10 +1593,13 @@ get_df_fairness_wide <- function(df_list) {
   
   # Add labels and text to the groups based on df_levels
   df_wide_3 <- df_wide_2 %>%
-    left_join(df_levels |> 
-                filter(!is.na(VAR_Level_label_NL_description)) |> 
-                select(VAR_Level_NL, VAR_Level_label_NL_description) |> 
-                distinct(), by = c("Groep" = "VAR_Level_NL")) |> 
+    left_join(
+      df_levels |>
+        filter(!is.na(VAR_Level_label_NL_description)) |>
+        select(VAR_Level_order, VAR_Level_NL, VAR_Level_label_NL_description, VAR_Simple_variable) |>
+        distinct(),
+      by = c("Groep" = "VAR_Level_NL", "Variabele" = "VAR_Simple_variable")
+    ) |>
     mutate(
       Groep_label = if_else(
         !is.na(VAR_Level_label_NL_description),
@@ -1604,8 +1607,11 @@ get_df_fairness_wide <- function(df_list) {
         Groep
       ),
       Text = glue("{Groep_label} ({Groep}: N = {N}, {Perc}%)")
-    ) |> 
-    select(-VAR_Level_label_NL_description) |> 
+    ) |>
+    ungroup() |>
+    arrange(Variabele, VAR_Level_order) |>
+    select(-VAR_Level_label_NL_description, -VAR_Level_order) |>
+    mutate(Variabele = stringr::str_to_title(Variabele)) |>
     select(Variabele, Groep, Groep_label, everything(), Text)
   
   df_wide_3
