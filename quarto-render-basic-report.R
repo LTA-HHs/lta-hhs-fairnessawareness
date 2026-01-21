@@ -22,7 +22,8 @@ library(quarto)
 # Define the parameters for the quarto file
 execute_params_list <- list(
   sp       = "CMD", # CMD or VD
-  sp_form  = "VT"
+  sp_form  = "VT",
+  data = "synthetic" #Possible values: "synthetic", "1cho", "real"
 )
 
 # Delete the _freeze folder (bug in Quarto)

@@ -184,7 +184,7 @@ get_current_sp_output_dir <- function(current_sp,
   ) |> tolower()
   
   # If synthetic data is used, add -synth to the directory
-  if (params$use_synthetic_data == TRUE) {
+  if (params$data == "synthetic") {
     faculty_sp_form <- paste0(faculty_sp_form, "-synth")
   }
   
@@ -623,7 +623,7 @@ mutate_levels <- function(df, vars, levels) {
 # Function to retrieve training name with or without synth
 get_sp_name_syn <- function(sp_name) {
   
-  if (params$use_synthetic_data == TRUE) {
+  if (params$data == "synthetic") {
     sp_name <- paste(sp_name, "(Synth)")
   } else {
     sp_name <- sp_name

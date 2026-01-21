@@ -10,8 +10,7 @@ params:
   succes: "Retentie na 1 jaar"
   model: "Retentie na 1 jaar"
   pd: "Nvt"
-  use_synthetic_data: false
-  use_1cho: true
+  data: "real"
 
   recreate_plots: false
   enrollment_selection: false
@@ -115,7 +114,7 @@ We laden een subset in van historische data specifiek voor:
 #| label: load-data
 
 # Read the data for this study programme
-if (params$use_synthetic_data) {
+if (params$data == "synthetic") {
   df_sp_enrollments <- get_sp_enrollments_syn(sp = params$sp,
                                               sp_form = toupper(params$sp_form)) |> 
     mutate(
@@ -127,8 +126,7 @@ if (params$use_synthetic_data) {
       INS_Student_UUID_opleiding_vorm = paste(ID, INS_Opleiding, INS_Opleidingsvorm, sep = "_"),
       INS_Opleidingsnaam_huidig = paste(INS_Opleidingsnaam_huidig, "(Synth.)", sep = " ")
     )
-} else {
-  if(params$use_1cho) {
+} else if(params$data == "1cho") {
     
     opleidingsnaam <- current_sp$INS_Opleidingsnaam_huidig
     opleidingsvorm <- toupper(params$sp_form)
@@ -180,7 +178,7 @@ if (params$use_synthetic_data) {
 
      
     
-  } else {
+  } else if (params$data == "real") {
     
   library(ltabase)
 
@@ -191,11 +189,12 @@ if (params$use_synthetic_data) {
                                          studyform = toupper(params$sp_form),
                                          range = "eerstejaars")
     
+  } else {
+    stop(paste0("Data source not recognized: ", params$data, ".\n Choose between \"1cho\", \"real\"r or \"synthetic\""))
   }
 
-}
 
-if(!params$use_1cho) {
+if(params$data != "1cho") {
 # Adjust df_sp_enrollments
 df_sp_enrollments <- df_sp_enrollments |> 
   
@@ -299,11 +298,15 @@ df_summary <- df_sp_enrollments |>
   mutate(Retentie = fct_recode(Retentie, "Nee" = "FALSE", "Ja" = "TRUE")) |>
   
   # Adjust the order of the labels of Retentie
-  mutate(Retentie = fct_relevel(Retentie, "Ja", "Nee")) |> 
-  
-  # Adjust Studiekeuzeprofiel: if NA, then unknown
-  #mutate(Studiekeuzeprofiel = coalesce(Studiekeuzeprofiel, "Onbekend")) |> 
-  
+  mutate(Retentie = fct_relevel(Retentie, "Ja", "Nee")) 
+
+if(params$data != "1cho") {
+  df_summary <- df_summary |>
+  mutate(Studiekeuzeprofiel = coalesce(Studiekeuzeprofiel, "Onbekend"))
+}
+
+df_summary <- df_summary |>
+    
   # Factor all character variables
   mutate(across(where(is.character), as.factor))
 
@@ -548,15 +551,20 @@ Vervolgens zetten we meerdere stappen in een 'recipe':
 #| code-fold: false
 
 # Build the recipe: logistic regression
-lr_recipe <- 
-  recipe(Retentie ~ ., data = df_retention_train) |>  
-  update_role(ID, new_role = "ID") |>           # Set the student ID as an ID variable
-  step_rm(ID, Collegejaar) |>                   # Remove ID and college year from the model
-  # step_unknown(Studiekeuzeprofiel, 
-  #              new_level = "Onbekend skp") |>   # Add unknown skp
-  step_dummy(all_nominal_predictors()) |>       # Create dummy variables from categorical variables
-  step_zv(all_predictors()) |>                  # Remove zero values
-  step_normalize(all_numeric_predictors())      # Center and scale numeric variables
+lr_recipe <- recipe(Retentie ~ ., data = df_retention_train) |>
+  update_role(ID, new_role = "ID") |>
+  step_rm(ID, Collegejaar)
+
+if (params$data != "1cho") {
+  lr_recipe <- lr_recipe |>
+    step_unknown(Studiekeuzeprofiel, new_level = "Onbekend skp")
+}
+
+lr_recipe <- lr_recipe |>
+  step_dummy(all_nominal_predictors()) |>
+  step_zv(all_predictors()) |>
+  step_normalize(all_numeric_predictors())
+
 
 ```
 
@@ -830,9 +838,14 @@ We maken een recipe voor het random forest model. We verwijderen de student ID e
 # Create the recipe: random forest
 rf_recipe <- 
   recipe(Retentie ~ ., data = df_retention_train) |> 
-  # step_unknown(Studiekeuzeprofiel, 
-  #              new_level = "Onbekend skp") |>   # Add unknown skp
   step_rm(ID, Collegejaar)                      # Remove ID and Collegejaar from the model
+
+if(params$data != "1cho") {
+  rf_recipe <- rf_recipe |>
+       step_unknown(Studiekeuzeprofiel, 
+                new_level = "Onbekend skp")
+}
+
 ```
 
 ```{r}

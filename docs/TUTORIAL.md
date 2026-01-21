@@ -231,9 +231,7 @@ consists of the following components:
       name as the success parameter.
     - `pd`: whether to take a propedeutic degree into account or not
       (false or true)  
-    - `use_synthetic_data`: whether to use synthetic data (false or
-      true).
-    - `use_1cho`: whether to use 1CHO data
+    - `data`: what data to use. Choose from "1cho", "real" or "synthetic"
     - `recreate_plots`: whether you want to recreate the plots (false or
       true)
     - `sp`: the code of the study programme
