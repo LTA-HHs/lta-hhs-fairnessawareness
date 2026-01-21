@@ -26,7 +26,8 @@
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # 1. INCLUDE PREPARATIONS  ####
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+# Load the brand settings
+brand_data <- read_yaml("brand/_brand.yml")
 source("R/scripts/preparations.explorations.R")
 
 # . ####
@@ -256,13 +257,13 @@ for (i in 1:nrow(tblOpleidingen)) {
   opleidingsvorm <- tblOpleidingen$Opleidingsvorm[i]
   
   # Create the variables for the current study programme based on the programme name and type of education
-  current_opleiding <- Get_Current_Opleiding(
-    opleiding = opleiding,
-    opleidingsvorm = toupper(opleidingsvorm)
+  current_opleiding <- get_current_sp(
+    sp = opleiding,
+    sp_form = toupper(opleidingsvorm)
   )
   
   # Based on this, determine derived variables
-  Set_Current_Opleiding_Vars(current_opleiding, debug = F)
+  set_current_sp_vars(current_opleiding, debug = F)
   
   dfOpleiding_inschrijvingen_base <- get_lta_studyprogram_enrollments_pin(
     board = "HHs/Inschrijvingen",

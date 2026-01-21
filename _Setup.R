@@ -96,6 +96,8 @@ if (!is.null(rmarkdown::metadata$config$environment)) {
 } else {
   environment <- "ceda"
 }
+## TODO: TEMP
+environment <- "hhs"
 
 cli_h1("Setting environment")
 cli_alert_success(glue("Environment is {col_red(environment)}"))

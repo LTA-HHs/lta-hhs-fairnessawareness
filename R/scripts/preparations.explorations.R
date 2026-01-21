@@ -40,7 +40,8 @@ for (i in c("here", "cli", "icecream")) {
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # 1.2 ltabase package (install if necessary) ####
 
-source("R/functions/load.ltabase.R")
+#source("R/functions/load.ltabase.R")
+library(ltabase)
 source("R/functions/fairness.helpers.R")
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -88,7 +89,7 @@ library(rsvg)         # for confusion matrices
 library(ggnewscale)   # for confusion matrices
 
 library(ggpubr)       # for storing plots
-library(bbplot)       # for storing plots
+#library(bbplot)       # for storing plots
 library(grid)         # for storing plots
 
 library(gridGraphics) # for storing plots
@@ -99,7 +100,7 @@ library(fairmodels)   # for fairness in models
 
 library(fs)           # for file system functions
 
-library(quartostamp)  # for additional quarto add-in functionality
+#library(quartostamp)  # for additional quarto add-in functionality
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # 1.5 Fonts ####
@@ -119,7 +120,7 @@ source("brand/colors/colors.R")
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # 1.8 Determine preferred themes ####
 
-Set_Theme()
+set_theme()
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # 1.9 Load additional features ####
@@ -127,7 +128,8 @@ Set_Theme()
 source("R/functions/report.helpers.R")
 
 # Determine the order of some levels
-Get_Levels()
+df_levels      <- get_df_levels()
+levels         <- get_levels(df_levels)
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # 1.10 Conflicts ####
@@ -141,4 +143,5 @@ conflicts_prefer(dplyr::select)
 ltabase::set_lta_sys_env()
 
 # Define the network directory
-Network_directory <- ltabase::get_lta_network_directory()
+network_directory <- ltabase::get_lta_network_directory()
+
