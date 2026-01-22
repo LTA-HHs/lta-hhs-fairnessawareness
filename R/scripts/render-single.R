@@ -153,15 +153,8 @@ for(i in 1:nrow(dfRender)) {
     
     # Define the parameters for the quarto file
     .execute_params <- list(
-      uitval                   = j,
-      faculteit                = current_render_opleiding$INS_Faculteit,
-      opleidingsnaam           = current_render_opleiding$INS_Opleidingsnaam_huidig,
-      opleiding                = current_render_opleiding$INS_Opleiding,
-      opleidingsvorm           = get_sp_form_long(current_render_opleiding$INS_Opleidingsvorm),
-      opleidingsvorm_afkorting = current_render_opleiding$INS_Opleidingsvorm,
-      selectie                 = ifelse(current_render_opleiding$INS_Opleiding == "HDT", 
-                                        TRUE, 
-                                        FALSE)
+      sp                = current_render_opleiding$INS_Opleiding,
+      sp_form = current_render_opleiding$INS_Opleidingsvorm
     )
     
     # Render the quarto file and move it to the output directory
