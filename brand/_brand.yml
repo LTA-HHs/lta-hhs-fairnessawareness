@@ -19,7 +19,11 @@ color:
 
 typography:
   fonts:
-    - family: Liter, sans-serif
-  headings: Liter, sans-serif
+    - family: Liter
+      source: google
+  base:
+    family: Liter
+  headings:
+    family: Liter
 
 

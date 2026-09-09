@@ -1806,6 +1806,10 @@ set_theme <- function(title_font = c("sans"), type = "plot") {
                                           margin = margin(15, 0, 0, 0)),
     
     # Assen
+    # NB: keep these plain element_text. Since ggplot2 4.0 a theme element of one
+    # class (e.g. element_text set in a plot) can no longer be merged onto a
+    # global element of another class (e.g. element_markdown). Markdown
+    # elements are therefore only set in plot-specific themes.
     axis.title.x = element_text(face = "bold",
                                 vjust = 5),
     axis.title.y = element_text(face = "bold",
@@ -1828,13 +1832,12 @@ set_theme <- function(title_font = c("sans"), type = "plot") {
 
     # Background white and border not visible
     plot.background = element_rect(fill = colors_default["background_color"],
-                                   color = NA) +
-
-      # Make the title of x and y a markdown element
-      theme(axis.title.x = element_markdown(), 
-            axis.title.y = element_markdown()) 
+                                   color = NA)
       
   )
+  
+  # Return the updated theme, so that set_theme() can also be used with +
+  invisible(theme_get())
   
 }
 
@@ -1846,8 +1849,10 @@ add_theme_elements <- function(p,
   # Customize theme with or without title and subtitle
   if (title_subtitle) {
     p <- p + theme(
-      plot.title = element_text(size = 14, face = "bold"),
-      plot.subtitle = element_markdown(),
+      # Same class as in set_theme() (element_textbox_simple), otherwise
+      # ggplot2 4.0 cannot merge the elements
+      plot.title = element_textbox_simple(size = 14, face = "bold"),
+      plot.subtitle = element_textbox_simple(),
       axis.text.y = element_text(size = 10),
       plot.caption = element_textbox_simple(
         size = 8,

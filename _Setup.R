@@ -49,11 +49,18 @@ if (requireNamespace("quarto", quietly = TRUE)) {
   quarto_version_minimal_number <- 16.39
   quarto_version_minimal_string <- "1.6.39"
   
-  # Get the version
-  quarto_version <- quarto::quarto_version()
+  # Get the version (NA if the quarto CLI cannot be found from within R;
+  # set QUARTO_PATH in .Renviron in that case)
+  quarto_version <- tryCatch(
+    as.character(quarto::quarto_version()),
+    error = function(e) NA_character_
+  )
   
   # Please verify that the version is 1.6.39 or higher.
-  if (as.numeric(sub("\\.", "", quarto_version)) >= quarto_version_minimal_number) {
+  if (is.na(quarto_version)) {
+    cli_alert_warning(glue("Quarto CLI not found from within R. ",
+                           "Set QUARTO_PATH in .Renviron to the quarto binary."))
+  } else if (as.numeric(sub("\\.", "", quarto_version)) >= quarto_version_minimal_number) {
     cli_alert_success(glue("Quarto version is {quarto_version_minimal_string} or higher ({quarto_version})."))
   } else {
     cli_alert_danger(glue("Quarto version is {quarto_version}, but {quarto_version_minimal_string} or higher is required. \n",
@@ -191,6 +198,39 @@ if (setup_executed == FALSE) {
   library(pins)         # for data sharing
   
   library(cvms)         # for confusion matrices
+  
+  # ltabase (own LTA package, outside renv) is only needed for the real data:
+  # it provides get_lta_studyprogram_enrollments_pin() and dfOpleidingen and
+  # reads the pins board on $LTA_ROOT/LTA_BOARD
+  if (!isTRUE(params$use_synthetic_data)) {
+    
+    # Install ltabase from GitHub if it is missing (same approach as lta-hhs-plots,
+    # 99. Functies & Libraries/00. Voorbereidingen.R). To force an update to the
+    # latest version, run this once in the console:
+    #   renv::install("LTA-HHs/ltabase@main", prompt = FALSE)
+    # A GITHUB_PAT with access to github.com/LTA-HHs is needed.
+    if (!requireNamespace("ltabase", quietly = TRUE)) {
+      cli::cli_alert_info("Installing ltabase from GitHub (LTA-HHs/ltabase@main)")
+      renv::install("LTA-HHs/ltabase@main", prompt = FALSE)
+    }
+    library(ltabase)
+    
+    # Default datasets: dfOpleidingen, sectors, studytypes, studyforms
+    # (dfOpleidingen is used by get_lta_studyprogram_enrollments_pin)
+    ltabase::load_lta_datasets(message = FALSE)
+    
+    # Fill LTA_RESEARCH, LTA_DATA and LTA_BOARD if only LTA_ROOT is set
+    ltabase::set_lta_sys_env()
+    if (Sys.getenv("LTA_ROOT") == "" ||
+          !dir.exists(file.path(Sys.getenv("LTA_ROOT"), Sys.getenv("LTA_BOARD")))) {
+      cli::cli_abort(c(
+        "The pins board for the real data cannot be found.",
+        "*" = "LTA_ROOT = {.val {Sys.getenv('LTA_ROOT')}}",
+        "*" = "LTA_BOARD = {.val {Sys.getenv('LTA_BOARD')}}",
+        "i" = "Set LTA_ROOT in .Renviron to the folder that contains LTA_Board (e.g. the Nextcloud LTA-HHS (Projectfolder))."
+      ))
+    }
+  }
   library(ggimage)      # for confusion matrices
   library(rsvg)         # for confusion matrices
   library(ggnewscale)   # for confusion matrices
@@ -440,13 +480,23 @@ if (setup_executed == FALSE) {
     if (check_data) {
       
       cli_h1("Data and model files.")
-      cli_alert_warning(
-        glue(
-          "One or more data or model files do not yet exist.",
-          "\n\n First, run the template in 'advanced-report' mode in the terminal:",
-          "\n quarto render --profile advanced-report"
-        )
+      
+      msg <- glue(
+        "One or more data or model files do not yet exist for this study programme:",
+        "\n {data_outputpath}",
+        "\n\n First, run the template in 'advanced-report' mode in the terminal:",
+        "\n quarto render --profile advanced-report"
       )
+      
+      # In the advanced-report profile the files are created by ch-models.qmd,
+      # which comes later in the book, so only warn there. In any other
+      # profile the render cannot succeed, so stop right away.
+      quarto_profile <- Sys.getenv("QUARTO_PROFILE", unset = "")
+      if (grepl("advanced-report", quarto_profile, fixed = TRUE)) {
+        cli_alert_warning(msg)
+      } else {
+        cli_abort(msg)
+      }
     }
     
   } else {
