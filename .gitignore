@@ -80,3 +80,5 @@ _freeze
 
 # Icon files
 Icon?
+
+**/*.quarto_ipynb

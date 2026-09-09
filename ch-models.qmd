@@ -10,11 +10,11 @@ params:
   succes: "Retentie na 1 jaar"
   model: "Retentie na 1 jaar"
   pd: "Nvt"
-  use_synthetic_data: true
+  use_synthetic_data: false
   recreate_plots: false
   enrollment_selection: false
-  sp: "CMD"
-  sp_form: "VT"
+  sp: "IVK"
+  sp_form: "DU"
   
 # Content
 includes:
@@ -126,13 +126,27 @@ if (params$use_synthetic_data) {
       INS_Opleidingsnaam_huidig = paste(INS_Opleidingsnaam_huidig, "(Synth.)", sep = " ")
     )
 } else {
+  # Real data from the pins board on $LTA_ROOT/LTA_Board (ltabase).
+  # The arguments are taken from current_sp (set in _Setup.R):
+  # studyprogram = full name, studytrack = code, studyform = VT/DT/DU
   df_sp_enrollments <- 
-    get_lta_studyprogram_enrollments_pin(board = "HHs/Inschrijvingen",
-                                         faculty = params$faculty,
-                                         studyprogram = params$sp,
-                                         sp = params$sp,
-                                         sp_form = toupper(params$sp_form),
-                                         range = "eerstejaars")
+    get_lta_studyprogram_enrollments_pin(board = pin_board,
+                                         faculty = current_sp$INS_Faculteit,
+                                         studyprogram = current_sp$INS_Opleidingsnaam_huidig,
+                                         studytrack = current_sp$INS_Opleiding,
+                                         studyform = toupper(params$sp_form),
+                                         range = "eerstejaars") |> 
+    mutate(
+      # The real data has no ID column (the synthetic set creates one):
+      # use the LTA student ID, or the row number if that is missing
+      ID = if ("INS_Student_ID_LTA" %in% names(pick(everything()))) {
+        as.character(INS_Student_ID_LTA)
+      } else {
+        as.character(row_number())
+      },
+      INS_Opleiding = as.character(INS_Opleiding),
+      INS_Opleidingsvorm = as.character(INS_Opleidingsvorm)
+    )
 }
 
 # Adjust df_sp_enrollments
